@@ -72,14 +72,14 @@ class Warrior:
         self.animations["attack"].reset()
 
     def update(self, keys):
-        left_now = keys[pygame.K_LEFT]
-        right_now = keys[pygame.K_RIGHT]
+        left_now = keys[pygame.K_q]
+        right_now = keys[pygame.K_d]
 
-        jump_now = keys[pygame.K_UP]
+        jump_now = keys[pygame.K_z]
         jump_pressed = jump_now and not self.prev_jump
         self.prev_jump = jump_now
 
-        attack_now = keys[pygame.K_RETURN] or keys[pygame.K_KP_ENTER]
+        attack_now = keys[pygame.K_SPACE]
         attack_pressed = attack_now and not self.prev_attack
         self.prev_attack = attack_now
 

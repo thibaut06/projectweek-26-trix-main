@@ -64,13 +64,13 @@ class Samurai:
 
     def update(self, keys):
         # key edge detection
-        space_now = keys[pygame.K_SPACE]
+        space_now = keys[pygame.K_KP_ENTER]
         space_pressed = space_now and not self.prev_space
         self.prev_space = space_now
 
-        z_now = keys[pygame.K_z]
-        z_pressed = z_now and not self.prev_z
-        self.prev_z = z_now
+        UP_now = keys[pygame.K_UP]
+        UP_pressed = UP_now and not self.prev_UP
+        self.prev_UP = UP_now
 
         moving = False
 
@@ -80,16 +80,16 @@ class Samurai:
 
         # movement
         if self.state != "attack":
-            if keys[pygame.K_d]:
+            if keys[pygame.K_RIGHT]:
                 self.rect.x += self.speed
                 self.facing_right = True
                 moving = True
-            elif keys[pygame.K_q]:
+            elif keys[pygame.K_LEFT]:
                 self.rect.x -= self.speed
                 self.facing_right = False
                 moving = True
 
-            if z_pressed and self.on_ground:
+            if UP_pressed and self.on_ground:
                 self.vel_y = -self.jump_strength
                 self.on_ground = False
 
