@@ -68,9 +68,9 @@ class Samurai:
         space_pressed = space_now and not self.prev_space
         self.prev_space = space_now
 
-        UP_now = keys[pygame.K_UP]
-        UP_pressed = UP_now and not self.prev_UP
-        self.prev_UP = UP_now
+        z_now = keys[pygame.K_UP]
+        z_pressed = z_now and not self.prev_z
+        self.prev_z = z_now
 
         moving = False
 
@@ -78,20 +78,20 @@ class Samurai:
         if space_pressed and self.state != "attack":
             self.start_attack()
 
-        # movement
-        if self.state != "attack":
-            if keys[pygame.K_RIGHT]:
-                self.rect.x += self.speed
-                self.facing_right = True
-                moving = True
-            elif keys[pygame.K_LEFT]:
-                self.rect.x -= self.speed
-                self.facing_right = False
-                moving = True
+        # movement (OOK TIJDENS ATTACK)
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += self.speed
+            self.facing_right = True
+            moving = True
+        elif keys[pygame.K_LEFT]:
+            self.rect.x -= self.speed
+            self.facing_right = False
+            moving = True
 
-            if UP_pressed and self.on_ground:
-                self.vel_y = -self.jump_strength
-                self.on_ground = False
+        # jump (OOK TIJDENS ATTACK)
+        if z_pressed and self.on_ground:
+            self.vel_y = -self.jump_strength
+            self.on_ground = False
 
         # gravity
         if not self.on_ground:
@@ -102,7 +102,7 @@ class Samurai:
                 self.vel_y = 0
                 self.on_ground = True
 
-        # state
+        # state (als je in attack zit, blijf attack tot anim klaar is)
         if self.state != "attack":
             if not self.on_ground:
                 self.state = "jump"
@@ -131,7 +131,6 @@ class Samurai:
             if anim.finished():
                 self.attack_hitbox = None
                 self.state = "idle"
-
         else:
             self.attack_hitbox = None
 
@@ -177,6 +176,6 @@ class Samurai:
         screen.blit(self.image, self.rect)
 
         # DEBUG HITBOXES
-       # pygame.draw.rect(screen, (0, 255, 0), self.hitbox, 2)
-       # if self.attack_hitbox:
-          #  pygame.draw.rect(screen, (255, 0, 0), self.attack_hitbox, 2)
+        # pygame.draw.rect(screen, (0, 255, 0), self.hitbox, 2)
+        # if self.attack_hitbox:
+        #     pygame.draw.rect(screen, (255, 0, 0), self.attack_hitbox, 2)
