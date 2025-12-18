@@ -4,7 +4,7 @@ from pygame.sprite import Sprite
 import os
 
 
-def load_menu():
+def load_menu(screen):
     # ---------------- COLORS ----------------
     WHITE = (255, 255, 255)
     GREY = (225, 225, 225)
@@ -12,20 +12,24 @@ def load_menu():
     LIGHT_BLUE = (71, 192, 232)
     TITLE_COLOR = (255, 255, 255)
 
-    # ---------------- SCREEN ----------------
-    SCREEN_WIDTH = 1200
-    SCREEN_HEIGHT = 720
     FPS = 60
+
+    # ✅ gebruik het fullscreen screen dat je al hebt
+    SCREEN_WIDTH, SCREEN_HEIGHT = screen.get_size()
 
     # ---------------- PATHS ----------------
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    PROJECT_DIR = os.path.dirname(BASE_DIR)  # één map omhoog (project root)
+    PROJECT_DIR = os.path.dirname(BASE_DIR)  # project root
     ASSETS_DIR = os.path.join(BASE_DIR, "assets")
     IMAGES_DIR = os.path.join(ASSETS_DIR, "images")
     MUSIC_DIR = os.path.join(PROJECT_DIR, "music")
 
-    BACKGROUND_IMAGE = os.path.join(IMAGES_DIR, "sky_background.webp")
-    # default music file; will fall back to first supported audio file in MUSIC_DIR
+    # ⚠️ kies de juiste extensie die jij echt hebt
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # main_menu/
+    PROJECT_DIR = os.path.dirname(BASE_DIR)                 # project root
+
+    IMAGES_DIR = os.path.join(PROJECT_DIR, "assets", "images")
+    BACKGROUND_IMAGE = os.path.join(IMAGES_DIR, "sky_background.jpg")
     MENU_MUSIC = os.path.join(MUSIC_DIR, "time_for_adventure.mp3")
 
     # ---------------- TEXT HELPER ----------------
@@ -62,27 +66,24 @@ def load_menu():
                 pygame.draw.rect(surface, DARK_BLUE, self.box_rect, width=3)
             surface.blit(self.text_image, self.rect)
 
-    # ---------------- STATE ----------------
-    state = {"result": None, "running": True}
-
     # ---------------- BUTTON ACTIONS ----------------
-    def play_action():
-        pygame.mixer.music.stop()   # 🔇 stop menu music
-        state["result"] = "play"
-        state["running"] = False
+    def stop_music():
+        try:
+            if pygame.mixer.get_init():
+                pygame.mixer.music.stop()
+        except Exception:
+            pass
 
-    def quit_action():
-        pygame.mixer.music.stop()
-        state["result"] = "quit"
-        state["running"] = False
-
-    # ---------------- INIT ----------------
-    pygame.init()
-    pygame.mixer.init()
-
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # ---------------- INIT (GEEN pygame.init, GEEN set_mode) ----------------
     pygame.display.set_caption("Warrior Hills")
     clock = pygame.time.Clock()
+
+    # mixer init mag, maar niet verplicht
+    try:
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
+    except Exception as e:
+        print("Menu: mixer init faalde:", e)
 
     # ---------------- MUSIC ----------------
     try:
@@ -95,20 +96,40 @@ def load_menu():
                 if candidates:
                     music_file = os.path.join(MUSIC_DIR, candidates[0])
 
-        if music_file:
+        if music_file and pygame.mixer.get_init():
             pygame.mixer.music.load(music_file)
             pygame.mixer.music.set_volume(0.5)
             pygame.mixer.music.play(-1)
         else:
-            print(f"Menu: geen muziekbestand gevonden in {MUSIC_DIR}")
+            print(f"Menu: geen muziekbestand gevonden / mixer niet init in {MUSIC_DIR}")
     except Exception as e:
         print("Menu: kan muziek niet laden/afspelen:", e)
 
     # ---------------- BACKGROUND ----------------
-    background = pygame.image.load(BACKGROUND_IMAGE).convert()
-    background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    try:
+        background = pygame.image.load(BACKGROUND_IMAGE).convert()
+        background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    except Exception as e:
+        print("Menu: background load faalde:", BACKGROUND_IMAGE, e)
+        background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        background.fill((0, 0, 0))
 
     # ---------------- UI ELEMENTS ----------------
+    result = None
+    running = True
+
+    def play_action():
+        nonlocal result, running
+        stop_music()
+        result = "play"
+        running = False
+
+    def quit_action():
+        nonlocal result, running
+        stop_music()
+        result = "quit"
+        running = False
+
     title = UIElement(
         center_position=(SCREEN_WIDTH // 2, 150),
         text="Warrior Hills",
@@ -137,15 +158,14 @@ def load_menu():
     ui_elements = [title, play_button, quit_button]
 
     # ---------------- MAIN LOOP ----------------
-    while state["running"]:
+    while running:
         mouse_pos = pygame.mouse.get_pos()
         mouse_pressed = pygame.mouse.get_pressed()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.mixer.music.stop()
-                state["result"] = "quit"
-                state["running"] = False
+                stop_music()
+                return "quit"
 
         screen.blit(background, (0, 0))
 
@@ -156,5 +176,4 @@ def load_menu():
         pygame.display.flip()
         clock.tick(FPS)
 
-    pygame.quit()
-    return state["result"]
+    return result
